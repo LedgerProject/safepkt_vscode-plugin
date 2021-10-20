@@ -17,7 +17,7 @@
 		"commands": [
 			{
 				"command": "safepkt-verifier.helloWorld",
-				"title": "Hello World"
+				"title": "Verify smart-contract"
 			}
 		]
 	},

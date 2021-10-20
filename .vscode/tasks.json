@@ -15,6 +15,16 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "Verify smart-contracts",
+			"type": "shell",
+			"command": "./safepkt-verifier/scripts/safepkt-cli verify_program --source ./examples/erc721.rs",
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
 		}
 	]
 }
