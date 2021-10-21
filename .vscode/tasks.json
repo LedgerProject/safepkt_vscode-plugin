@@ -17,13 +17,12 @@
 			}
 		},
 		{
-			"label": "Verify smart-contracts",
-			"type": "shell",
-			"command": "./safepkt-verifier/scripts/safepkt-cli verify_program --source ./examples/erc721.rs",
-			"group": "test",
+			"type": "npm",
+			"script": "compile",
+			"problemMatcher": "$tsc",
 			"presentation": {
-				"reveal": "always",
-				"panel": "new"
+				"reveal": "never",
+				"panel": "dedicated"
 			}
 		}
 	]

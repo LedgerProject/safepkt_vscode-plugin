@@ -7,19 +7,37 @@
 		"vscode": "^1.61.0"
 	},
 	"categories": [
-		"Other"
+		"Testing"
 	],
 	"activationEvents": [
-		"onCommand:safepkt-verifier.helloWorld"
+		"onCommand:workbench.action.tasks.runTask"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"commands": [
+		"taskDefinitions": [
 			{
-				"command": "safepkt-verifier.helloWorld",
-				"title": "Verify smart-contract"
+				"type": "safePKTSmartContractVerification",
+				"required": [
+					"smartContractPath"
+				],
+				"properties": {
+					"smartContractPath": {
+						"type": "string",
+						"description": "Path to a Rust-based smart-contract based on ink! v2.1.0"
+					}
+				}
 			}
-		]
+		],
+		"configuration": {
+			"title": "SafePKT Smart Contract Verifier",
+			"properties": {
+				"safePKTSmartContractVerifier.verifier": {
+					"type": "string",
+					"default": "/usr/local/bin/verify",
+					"description": "Specify the path the CLI verifier binary."
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
