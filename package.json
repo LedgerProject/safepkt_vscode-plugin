@@ -16,13 +16,14 @@
 	"contributes": {
 		"taskDefinitions": [
 			{
-				"type": "safePKTSmartContractVerification",
+				"type": "SafePKTSmartContractVerification",
 				"required": [
 					"smartContractPath"
 				],
 				"properties": {
 					"smartContractPath": {
 						"type": "string",
+						"default": "${workspaceRoot}/src/lib.rs",
 						"description": "Path to a Rust-based smart-contract based on ink! v2.1.0"
 					}
 				}
@@ -32,9 +33,10 @@
 			"title": "SafePKT Smart Contract Verifier",
 			"properties": {
 				"safePKTSmartContractVerifier.verifier": {
-					"type": "string",
-					"default": "/usr/local/bin/verify",
-					"description": "Specify the path the CLI verifier binary."
+					"type": "array",
+					"default": ["/usr/local/bin/verify"],
+					"description": "Specify the path to the CLI verifier binary.",
+					"scope": "window"
 				}
 			}
 		}

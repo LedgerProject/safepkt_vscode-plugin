@@ -63,7 +63,7 @@ async function getSafePKTSmartContractVerifierTasks({state: sharedState}: {state
                     }
                                     
                     const definition = {
-                        type: SafePKTSmartContrackVerifier.smartContractVerificationType,
+                        type: SafePKTSmartContractVerifier.smartContractVerificationType,
                         smartContractPath: "/tmp/374567ab67/src/lib.rs"
                     };
 
@@ -71,7 +71,7 @@ async function getSafePKTSmartContractVerifierTasks({state: sharedState}: {state
                         definition,
                         vscode.TaskScope.Workspace,
                         `Verify Smart Contract available at "${definition.smartContractPath}"`,
-                        SafePKTSmartContrackVerifier.smartContractVerificationType,
+                        SafePKTSmartContractVerifier.smartContractVerificationType,
                         new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
                             // When the task is executed, this callback will run. Here, we setup for running the task.
                             return new SafePKTSmartContractVerificationTaskTerminal(
@@ -110,27 +110,14 @@ interface SafePKTSmartContractVerificationTaskDefinition extends vscode.TaskDefi
 	smartContractPath: string;
 }
 
-export class SafePKTSmartContrackVerifier implements vscode.TaskProvider {
-	static smartContractVerificationType = 'safePKTSmartContractVerification';
+export class SafePKTSmartContractVerifier implements vscode.TaskProvider {
+	static smartContractVerificationType = 'SafePKTSmartContractVerification';
 
     private tasks: vscode.Task[] | undefined;
 
-    private safePKTVerifierPromise: Thenable<vscode.Task[]> | undefined = undefined;
-
-	// We use a CustomExecution task when state needs to be shared across runs of the task or when 
-	// the task requires use of some VS Code API to run.
-	// If you don't need to share state between runs and if you don't need to execute VS Code API in your task, 
-	// then a simple ShellExecution or ProcessExecution should be enough.
-	// Since our build has this shared state, the CustomExecution is used below.
 	private sharedState: string | undefined;
 
 	constructor(private workspaceRoot: string) { }
-
-	// public async provideTasks(): Promise<vscode.Task[]> {
-    //     const state = {state: this.sharedState};
-
-	// 	return getSafePKTSmartContractVerifierTasks(state);
-    // }
 
 	public async provideTasks(): Promise<vscode.Task[]> {
 		return this.getTasks();
@@ -166,7 +153,7 @@ export class SafePKTSmartContrackVerifier implements vscode.TaskProvider {
     ): vscode.Task {
 		if (definition === undefined) {
 			definition = {
-				type: SafePKTSmartContrackVerifier.smartContractVerificationType,
+				type: SafePKTSmartContractVerifier.smartContractVerificationType,
 				smartContractPath,
 			};
 		}
@@ -175,7 +162,7 @@ export class SafePKTSmartContrackVerifier implements vscode.TaskProvider {
             definition,
             vscode.TaskScope.Workspace,
             `Verify Smart Contract available at "${smartContractPath}"`,
-			SafePKTSmartContrackVerifier.smartContractVerificationType,
+			SafePKTSmartContractVerifier.smartContractVerificationType,
             new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
 				// When the task is executed, this callback will run. Here, we setup for running the task.
 				return new SafePKTSmartContractVerificationTaskTerminal(
@@ -234,6 +221,10 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 
             this.writeEmitter.fire(`${this.workspaceRoot}/src/lib.rs`);
 
+            let config = vscode.workspace.getConfiguration("safePKTSmartContractVerifier");
+            const verify = config.verify;
+
+            this.writeEmitter.fire(`${verify}.\r\n`);
             this.writeEmitter.fire('Starting rust-based smart contract verification.\r\n');
             this.writeEmitter.fire('Rust smart contract verification complete.\r\n\r\n');
             this.closeEmitter.fire(0);

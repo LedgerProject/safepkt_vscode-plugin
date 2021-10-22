@@ -1,20 +1,24 @@
-# safepkt-verifier README
+# SafePKT Verifier Extension for Visual Studio Code
 
-This is the README for your extension "safepkt-verifier". After writing up a brief description, we recommend including the following sections.
+This project is implemented in the context of the European NGI LEDGER program.
+
+This prototype aims at bringing more automation
+to the field of software verification tools targeting rust-based programs.
+
+See [SafePKT description](https://ledgerproject.github.io/home/#/teams/SafePKT)
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Rust-based smart contract Task-based verification for VS Code editor.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+The pathSafePKT verifier binary has to be downloaded,
+and this extension should be configured to point at its readable absolute path.
+
+```
+wget https://github.com/LedgerProject/safepkt_backend/releases/download/safepkt-backend-v0.2.2/safepkt-cli-v0.2.2-linux -O /usr/local/bin/safepkt-cli 
+```
 
 ## Extension Settings
 
@@ -24,47 +28,18 @@ For example:
 
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `safePKTSmartContractVerifier.verifier`: ["/usr/local/bin/verify"]
 
-## Known Issues
+# Acknowledgment
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+We're very grateful towards the following organizations, projects and people:
+ - the Project Oak maintainers for making [Rust Verifications Tools](https://project-oak.github.io/rust-verification-tools/), a dual-licensed open-source project (MIT / Apache).  
+ The RVT tools allowed us to integrate with industrial-grade verification tools in a very effective way. 
+ - the KLEE Symbolic Execution Engine maintainers
+ - the Rust community at large
+ - All members of the NGI-Ledger Consortium for accompanying us  
+ [![Blumorpho](../main/img/blumorpho-logo.png?raw=true)](https://www.blumorpho.com/) [![Dyne](../main/img/dyne-logo.png?raw=true)](https://www.dyne.org/ledger/) [![FundingBox](../main/img/funding-box-logo.png?raw=true)](https://fundingbox.com/) [![NGI LEDGER](../main/img/ledger-eu-logo.png?raw=true)](https://ledger-3rd-open-call.fundingbox.com/)
 
-## Release Notes
+# License
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+This project is distributed under either the [MIT](../../blob/main/LICENSE-MIT) license or the [Apache](../../blob/main/LICENSE-APACHE) License.

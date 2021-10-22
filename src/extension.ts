@@ -1,9 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { SafePKTSmartContrackVerifier } from './safePKTSmartContrackVerifier';
+import { SafePKTSmartContractVerifier } from './safePKTSmartContractVerifier';
 
-let safePKTSmartContrackVerifier: vscode.Disposable | undefined;
+let safePKTSmartContractVerifier: vscode.Disposable | undefined;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -15,14 +15,14 @@ export function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	safePKTSmartContrackVerifier = vscode.tasks.registerTaskProvider(
-		SafePKTSmartContrackVerifier.smartContractVerificationType,
-		new SafePKTSmartContrackVerifier(workspaceRoot)
+	safePKTSmartContractVerifier = vscode.tasks.registerTaskProvider(
+		SafePKTSmartContractVerifier.smartContractVerificationType,
+		new SafePKTSmartContractVerifier(workspaceRoot)
 	);
 }
 
 export function deactivate(): void {
-	if (safePKTSmartContrackVerifier) {
-		safePKTSmartContrackVerifier.dispose();
+	if (safePKTSmartContractVerifier) {
+		safePKTSmartContractVerifier.dispose();
 	}
 }
