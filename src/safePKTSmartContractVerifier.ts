@@ -27,85 +27,6 @@ function exists(file: string): Promise<boolean> {
 	});
 }
 
-
-async function getSafePKTSmartContractVerifierTasks({state: sharedState}: {state: string | undefined}): Promise<vscode.Task[]> {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    const result: vscode.Task[] = [];
-
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-        return result;
-    }
-
-    for (const workspaceFolder of workspaceFolders) {
-        const folderString = workspaceFolder.uri.fsPath;
-        if (!folderString) {
-            continue;
-        }
-
-        const commandLine = path.join(folderString, '/scripts/safepkt-cli');
-        if (!await exists(commandLine)) {
-            continue;
-        }
-
-        try {
-            const { stdout, stderr } = await exec(`${commandLine} verify_program --help`, { cwd: folderString });
-
-            if (stderr && stderr.length > 0) {
-                getOutputChannel().appendLine(stderr);
-                getOutputChannel().show(true);
-            }
-
-            if (stdout) {
-                const lines = stdout.split(/\n/);
-                for (const line of lines) {
-                    if (line.length === 0) {
-                        continue;
-                    }
-                                    
-                    const definition = {
-                        type: SafePKTSmartContractVerifier.smartContractVerificationType,
-                        smartContractPath: "/tmp/374567ab67/src/lib.rs"
-                    };
-
-                    const task = new vscode.Task(
-                        definition,
-                        vscode.TaskScope.Workspace,
-                        `Verify Smart Contract available at "${definition.smartContractPath}"`,
-                        SafePKTSmartContractVerifier.smartContractVerificationType,
-                        new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
-                            // When the task is executed, this callback will run. Here, we setup for running the task.
-                            return new SafePKTSmartContractVerificationTaskTerminal(
-                                folderString, 
-                                definition.smartContractPath,
-                                () => sharedState,
-                                (state: string) => sharedState = state
-                            );
-                        }));
-
-                    result.push(task);
-
-                    task.group = vscode.TaskGroup.Test;
-                }
-            }
-        } catch (err: any) {
-            const channel = getOutputChannel();
-
-            if (err.stderr) {
-                channel.appendLine(err.stderr);
-            }
-
-            if (err.stdout) {
-                channel.appendLine(err.stdout);
-            }
-
-            channel.appendLine('Auto detecting safepkt-cli tasks failed.');
-            channel.show(true);
-        }
-    };
-
-    return result;
-}
-
 interface SafePKTSmartContractVerificationTaskDefinition extends vscode.TaskDefinition {
 	smartContractPath: string;
 }
@@ -126,6 +47,8 @@ export class SafePKTSmartContractVerifier implements vscode.TaskProvider {
 	public resolveTask(_task: vscode.Task): vscode.Task | undefined {
 		const smartContractPath: string = _task.definition.smartContractPath;
 
+        console.log({smartContractPath});
+
         if (smartContractPath) {
 			const definition: SafePKTSmartContractVerificationTaskDefinition = <any>_task.definition;
 			return this.getTask(definition.smartContractPath, definition);
@@ -139,7 +62,7 @@ export class SafePKTSmartContractVerifier implements vscode.TaskProvider {
 			return this.tasks;
 		}
 
-		const smartContractPath: string = '/tmp/374567ab67/src/lib.rs';
+		const smartContractPath: string = `${this.workspaceRoot}/src/lib.rs`;
 
 		this.tasks = [];
         this.tasks!.push(this.getTask(smartContractPath));
@@ -201,32 +124,27 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 	}
 
 	open(initialDimensions: vscode.TerminalDimensions | undefined): void {
-		// At this point we can start using the terminal.
-        const pattern = path.join(this.workspaceRoot, 'src/*.rs');
-
-        console.log(pattern);
-
-        const fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
-
-        fileWatcher.onDidChange(() => this.doVerify());
-		fileWatcher.onDidCreate(() => this.doVerify());
-		fileWatcher.onDidDelete(() => this.doVerify());
-
         this.doVerify();
 	}
 
     private async doVerify(): Promise<void> {
-		return new Promise<void>((resolve) => {
-            // const { stdout, stderr } = await exec(`${commandLine} verify_program --help`, { cwd: folderString });
-
-            this.writeEmitter.fire(`${this.workspaceRoot}/src/lib.rs`);
-
-            let config = vscode.workspace.getConfiguration("safePKTSmartContractVerifier");
-            const verify = config.verify;
-
-            this.writeEmitter.fire(`${verify}.\r\n`);
+		return new Promise<void>(async (resolve) => {
             this.writeEmitter.fire('Starting rust-based smart contract verification.\r\n');
-            this.writeEmitter.fire('Rust smart contract verification complete.\r\n\r\n');
+
+            const binaryPathParts: string[]|undefined = vscode.workspace.getConfiguration('safePKTSmartContractVerifier').get('verifier');
+            if (binaryPathParts && binaryPathParts.length > 0) {
+                const command = `${binaryPathParts.join("")} verify_program --source=${this.workspaceRoot}/src/lib.rs`;
+
+                const parts = binaryPathParts.join("").split('/');
+                const parentDir = parts.slice(0, parts.length - 1);
+
+                this.writeEmitter.fire(`=> About to run: "${command}"\r\n`);
+                this.writeEmitter.fire(`=> Current working directory: "${parentDir.join("/")}"\r\n`);
+
+                const { stdout, stderr } = await exec(command, { cwd: parentDir.join("/") });
+                this.writeEmitter.fire(`${stdout} ${stderr}`);
+            }
+
             this.closeEmitter.fire(0);
 
             resolve();
