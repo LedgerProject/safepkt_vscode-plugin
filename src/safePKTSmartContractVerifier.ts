@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 
@@ -32,7 +31,7 @@ interface SafePKTSmartContractVerificationTaskDefinition extends vscode.TaskDefi
 }
 
 export class SafePKTSmartContractVerifier implements vscode.TaskProvider {
-	static smartContractVerificationType = 'SafePKTSmartContractVerification';
+	static smartContractVerificationType = 'Verify smart contract (requires ink! v2.1.0)';
 
     private tasks: vscode.Task[] | undefined;
 
@@ -95,14 +94,6 @@ export class SafePKTSmartContractVerifier implements vscode.TaskProvider {
                 );
 			}));
 	}
-}
-
-let _channel: vscode.OutputChannel;
-function getOutputChannel(): vscode.OutputChannel {
-	if (!_channel) {
-		_channel = vscode.window.createOutputChannel('safepkt-cli auto detection');
-	}
-	return _channel;
 }
 
 class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudoterminal {
