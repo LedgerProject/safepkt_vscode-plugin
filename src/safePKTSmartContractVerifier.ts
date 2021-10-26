@@ -195,14 +195,14 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 					if (isVerificationOver) {
 						const resp: {[index: string]: string} = await programVerificationStep(projectId, 'report'); 
 
-						const pattern = /^([\s\S]*)(test\sresult:).*(\d+\spassed);\s(\d+\sfailed).*/gm;
+						const pattern = new RegExp('^([\s\S]*test\sresult:.*\d+\spassed;\s\d+\sfailed).*', 'gm');
 						const results = resp.raw_log.replaceAll(pattern, (...args: any[]): string => args[0]);
 
 						progress.report({
 							message: 'Complete - 100%'
 						});
 
-						this.writeEmitter.fire(`${results.replaceAll(/[\r\n]+/g, "\n")}\r\n`);
+						this.writeEmitter.fire(`${results.replaceAll(/[\\r\\n]+/g, `\r\n`)}\r\n`);
 
 						this.closeEmitter.fire(0);
 						resolve();
