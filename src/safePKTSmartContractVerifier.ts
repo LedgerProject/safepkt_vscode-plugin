@@ -187,9 +187,8 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 				};
 
 				let counter = 0;
-				let intervalId: NodeJS.Timeout;
 
-				const checkingProgresss = async (progress: vscode.Progress<any>) => {
+				const checkingProgresss = async (progress: vscode.Progress<any>): Promise<boolean> => {
 					const resp: {[index: string]: string} = await programVerificationStep(projectId, 'progress'); 
 					const isVerificationOver = resp.raw_status !== 'running';
 
@@ -199,31 +198,50 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 						const pattern = /^([\s\S]*)(test\sresult:).*(\d+\spassed);\s(\d+\sfailed).*/gm;
 						const results = resp.raw_log.replaceAll(pattern, (...args: any[]): string => args[0]);
 
-						progress.report({ message: `Program verification complete - 100%` });
+						progress.report({
+							message: 'Complete - 100%'
+						});
 
-						this.writeEmitter.fire(`${results.replaceAll(/[\r\n]+/, "\n")}\r\n`);
-
-						clearInterval(intervalId);
+						this.writeEmitter.fire(`${results.replaceAll(/[\r\n]+/g, "\n")}\r\n`);
 
 						this.closeEmitter.fire(0);
 						resolve();
+
+						return true;
 					}
 
 					counter = counter + 1;
+
+					return false;
 				};
+
+				const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 				vscode.window.withProgress({
 					location: vscode.ProgressLocation.Notification,
 					cancellable: false,
-					title: 'Verifying smart contract'
+					title: 'Smart contract Verification'
 				}, async (progress) => {
-					intervalId = setInterval(
-						async () => {
-							progress.report({ message: `Program verification in progress - ${counter}%` });
-							await checkingProgresss(progress);
-						}, 
-						2000
-					);
+					while (true) {
+						try {
+							if (counter > 90) {
+								progress.report({ message: `in progress - 90%` });
+							} else {
+								progress.report({ message: `in progress - ${counter}%` });
+							}
+
+
+							if (await checkingProgresss(progress)) {
+								break;
+							}
+
+							await sleep(2000);
+						} catch (e) {
+							if (e instanceof Error) {
+								this.writeEmitter.fire(`❌ ${e.message}`);
+							}
+						}
+					}
 				});
 			}
 		});
