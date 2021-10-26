@@ -4,27 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
+import got, { CancelableRequest, Response } from 'got';
+import {Base64} from 'js-base64';
+import { constants } from 'fs';
+import { access } from 'fs/promises';
+import dummyReport from './dummyReport';
 
-function exec(command: string, options: cp.ExecOptions): Promise<{ stdout: string; stderr: string }> {
-	return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-		cp.exec(command, options, (error, stdout, stderr) => {
-			if (error) {
-				reject({ error, stdout, stderr });
-			}
-
-            resolve({ stdout, stderr });
-		});
-	});
-}
-
-function exists(file: string): Promise<boolean> {
-	return new Promise<boolean>((resolve, _reject) => {
-		fs.exists(file, (value) => {
-			resolve(value);
-		});
-	});
-}
+const exists = async (path: string): Promise<boolean> => {
+	try {
+		await access(path, constants.R_OK);
+		return true;
+	} catch (e) {
+		return false;
+	}
+};
 
 interface SafePKTSmartContractVerificationTaskDefinition extends vscode.TaskDefinition {
 	smartContractPath: string;
@@ -120,25 +113,119 @@ class SafePKTSmartContractVerificationTaskTerminal implements vscode.Pseudotermi
 
     private async doVerify(): Promise<void> {
 		return new Promise<void>(async (resolve) => {
-            this.writeEmitter.fire('Starting rust-based smart contract verification.\r\n');
+            this.writeEmitter.fire('✅ Started rust-based smart contract verification.\r\n');
 
-            const binaryPathParts: string[]|undefined = vscode.workspace.getConfiguration('safePKTSmartContractVerifier').get('verifier');
-            if (binaryPathParts && binaryPathParts.length > 0) {
-                const command = `${binaryPathParts.join("")} verify_program --source=${this.workspaceRoot}/src/lib.rs`;
+            const backendParts: string[]|undefined = vscode.workspace
+				.getConfiguration('SmartContractVerifier')
+				.get('backend');
 
-                const parts = binaryPathParts.join("").split('/');
-                const parentDir = parts.slice(0, parts.length - 1);
 
-                this.writeEmitter.fire(`=> About to run: "${command}"\r\n`);
-                this.writeEmitter.fire(`=> Current working directory: "${parentDir.join("/")}"\r\n`);
+			if (!(await exists(`${this.workspaceRoot}/src/lib.rs`))) {
+				this.writeEmitter.fire([
+					'❌ Can not find smart contract expected to be readable',
+					`from "${this.workspaceRoot}/src/lib.rs".\r\n`
+				].join(" "));
+				this.closeEmitter.fire(0);
+				resolve();
+				return;
+			}
+				
+			if (Array.isArray(backendParts) && backendParts.length > 0) {
+				const smartContractSource = fs.readFileSync(`${this.workspaceRoot}/src/lib.rs`, 'utf8');
+				const encodedSmartContractSource = Base64.encode(smartContractSource);
+				const backend = backendParts.join("");
+				
+				const routes: {[index: string]: {path: string}} = {
+					uploadSource: {
+						path: '/source'
+					},
+					verifyProgram: {
+						path: '/program-verification/{{ projectId }}'
+					},
+					getProgramVerificationProgress: {
+						path: '/program-verification/{{ projectId }}/progress'
+					},
+					getProgramVerificationReport: {
+						path: '/program-verification/{{ projectId }}/report'
+					}
+				};
 
-                const { stdout, stderr } = await exec(command, { cwd: parentDir.join("/") });
-                this.writeEmitter.fire(`${stdout} ${stderr}`);
-            }
+				const responsePromise: CancelableRequest<Response<Buffer>> = got.post(`${backend}${routes.uploadSource.path}`, {
+					json: {
+						source: encodedSmartContractSource
+					},
+					responseType: 'json'
+				});
 
-            this.closeEmitter.fire(0);
+				const response: {[index: string]: string} = await responsePromise.json();
+				const projectId = response['project_id'];
 
-            resolve();
+				if (projectId && projectId.length > 0) {
+					const verifyProgramPath = `${backend}${routes.verifyProgram.path}`.replace('{{ projectId }}', projectId);
+					const responsePromise: CancelableRequest<Response<Buffer>> = got.post(verifyProgramPath, {
+						responseType: 'json'
+					});
+
+					const response: {[index: string]: string} = await responsePromise.json();
+            		this.writeEmitter.fire(`✅ Successfully uploaded smart contract source.\r\n`);
+				}
+
+				const programVerificationStep = async (projectId: string, stepType: string) => {
+					const capitalizedFirstLetter = stepType[0].toUpperCase();
+					const rest = stepType.slice(1, stepType.length);
+
+					const capitalizedStepType = `${capitalizedFirstLetter}${rest}`;
+					const routeName  = `getProgramVerification${capitalizedStepType}`;
+
+					const path = `${backend}${routes[routeName].path}`
+					.replace('{{ projectId }}', projectId);
+
+					const responsePromise: CancelableRequest<Response<Buffer>> = got.get(path, { responseType: 'json' });
+					const response: {[index: string]: string} = await responsePromise.json();
+
+					return response;
+				};
+
+				let counter = 0;
+				let intervalId: NodeJS.Timeout;
+
+				const checkingProgresss = async (progress: vscode.Progress<any>) => {
+					const resp: {[index: string]: string} = await programVerificationStep(projectId, 'progress'); 
+					const isVerificationOver = resp.raw_status !== 'running';
+
+					if (isVerificationOver) {
+						const resp: {[index: string]: string} = await programVerificationStep(projectId, 'report'); 
+
+						const pattern = /^([\s\S]*)(test\sresult:).*(\d+\spassed);\s(\d+\sfailed).*/gm;
+						const results = resp.raw_log.replaceAll(pattern, (...args: any[]): string => args[0]);
+
+						progress.report({ message: `Program verification complete - 100%` });
+
+						this.writeEmitter.fire(`${results.replaceAll(/[\r\n]+/, "\n")}\r\n`);
+
+						clearInterval(intervalId);
+
+						this.closeEmitter.fire(0);
+						resolve();
+					}
+
+					counter = counter + 1;
+				};
+
+				vscode.window.withProgress({
+					location: vscode.ProgressLocation.Notification,
+					cancellable: false,
+					title: 'Verifying smart contract'
+				}, async (progress) => {
+					intervalId = setInterval(
+						async () => {
+							progress.report({ message: `Program verification in progress - ${counter}%` });
+							await checkingProgresss(progress);
+						}, 
+						2000
+					);
+				});
+			}
 		});
 	}
 
