@@ -96,8 +96,6 @@ const setUpTestController = (workspaceRoot: string, testController: vscode.TestC
 
 		try {
 			await (async () => {
-				const queue: vscode.TestItem[] = [];
-
 				const pattern = new vscode.RelativePattern(workspaceRoot, 'src/*.rs');
 				for (const res of await vscode.workspace.findFiles(pattern)) {
 					const testItem = getOrCreateFile(res);
