@@ -1,7 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { SafePKTSmartContractVerifier } from './safePKTSmartContractVerifier';
+import { SafePKTSmartContractVerifier } from './verifier';
+import setUpTestController from './testController';
 
 let safePKTSmartContractVerifier: vscode.Disposable | undefined;
 
@@ -9,9 +10,10 @@ let safePKTSmartContractVerifier: vscode.Disposable | undefined;
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	const workspaceRoot = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
-		? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
+		? vscode.workspace.workspaceFolders[0].uri.fsPath 
+		: undefined;
 
-		if (!workspaceRoot) {
+	if (!workspaceRoot) {
 		return;
 	}
 
@@ -19,6 +21,17 @@ export function activate(context: vscode.ExtensionContext) {
 		SafePKTSmartContractVerifier.smartContractVerificationType,
 		new SafePKTSmartContractVerifier(workspaceRoot)
 	);
+
+	const testController = vscode.tests.createTestController('smartContractTests', 'Smart Contract Tests');
+	context.subscriptions.push(testController);
+
+	try {
+		setUpTestController(workspaceRoot, testController);
+	} catch (e) {
+		if (e instanceof Error) {
+			console.error(e);
+		}
+	}
 }
 
 export function deactivate(): void {

@@ -15,14 +15,17 @@
 		"Testing"
 	],
 	"activationEvents": [
-		"onCommand:workbench.action.tasks.runTask"
+		"onCommand:workbench.action.tasks.runTask",
+		"onCommand:SmartContractVerifier.verifySmartContract",
+		"workspaceContains:src/*.rs"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"taskDefinitions": [
 			{
-				"type": "SafePKTSmartContractVerification",
+				"type": "verify-smart-contract",
 				"required": [
+					"smartContractPath",
 					"smartContractPath"
 				],
 				"properties": {
