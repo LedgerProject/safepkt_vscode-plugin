@@ -5,6 +5,7 @@
 		"outDir": "out",
 		"lib": [
 			"ES2021",
+			"es2015.collection",
 			"dom",
 		],
 		"sourceMap": true,
