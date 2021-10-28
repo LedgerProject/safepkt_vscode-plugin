@@ -5,6 +5,7 @@
 	"version": "0.2.4",
 	"publisher": "CJDNS",
 	"private": true,
+	"icon": "img/safepkt-logo.png",
 	"licenses": [
 		{
 			"type": "MIT",
