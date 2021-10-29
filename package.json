@@ -2,7 +2,7 @@
 	"name": "safepkt-verifier",
 	"displayName": "SafePKT verifier",
 	"description": "Static analysis of rust-based smart contracts",
-	"version": "0.2.7",
+	"version": "0.2.8",
 	"publisher": "CJDNS",
 	"private": true,
 	"icon": "img/safepkt-logo.png",
