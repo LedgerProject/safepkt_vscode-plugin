@@ -13,12 +13,7 @@ Rust-based smart contract Task-based verification for VS Code editor.
 
 ## Requirements
 
-The pathSafePKT verifier binary has to be downloaded,
-and this extension should be configured to point at its readable absolute path.
-
-```
-wget https://github.com/LedgerProject/safepkt_backend/releases/download/safepkt-backend-v0.2.2/safepkt-cli-v0.2.2-linux -O /usr/local/bin/safepkt-cli 
-```
+The extension should be able to send HTTP requests to SafePKT backend.
 
 ## Extension Settings
 
@@ -28,7 +23,14 @@ For example:
 
 This extension contributes the following settings:
 
-* `safePKTSmartContractVerifier.verifier`: ["/usr/local/bin/verify"]
+* `safePKTSmartContractVerifier.backend`: ["https://vinny.cjdns.fr"]
+
+This value is an array, which can possibly contain as a single string value
+ - an HTTP or HTTPS protocol scheme ("https://")  
+ - a host name ("vinny.cjdns.fr")  
+ - a base path ("" empty by default)  
+
+resulting in the default value "https://vinny.cjdns.fr"
 
 # Acknowledgment
 
@@ -36,6 +38,7 @@ We're very grateful towards the following organizations, projects and people:
  - the Project Oak maintainers for making [Rust Verifications Tools](https://project-oak.github.io/rust-verification-tools/), a dual-licensed open-source project (MIT / Apache).  
  The RVT tools allowed us to integrate with industrial-grade verification tools in a very effective way. 
  - the KLEE Symbolic Execution Engine maintainers
+ - Tree-sitter, a parser generator tool and an incremental parsing library 
  - the Rust community at large
  - All members of the NGI-Ledger Consortium for accompanying us  
  [![Blumorpho](../main/img/blumorpho-logo.png?raw=true)](https://www.blumorpho.com/) [![Dyne](../main/img/dyne-logo.png?raw=true)](https://www.dyne.org/ledger/) [![FundingBox](../main/img/funding-box-logo.png?raw=true)](https://fundingbox.com/) [![NGI LEDGER](../main/img/ledger-eu-logo.png?raw=true)](https://ledger-3rd-open-call.fundingbox.com/)
