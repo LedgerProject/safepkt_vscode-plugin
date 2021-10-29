@@ -253,6 +253,13 @@ const setUpTestController = (
 					const verificationResults = await promisifyVerification(() => {}, () => {}, workspaceRoot);
 
 					const endedAt = Date.now() - start;
+
+					run.appendOutput(
+						verificationResults,
+						new vscode.Location(res, new vscode.Position(0, 0)), 
+						testItem
+					);
+
 					run.passed(testItem, endedAt);
 
 					testItem.children.forEach(childTestItem => {
@@ -266,12 +273,6 @@ const setUpTestController = (
 						childRun.passed(childTestItem, endedAt);
 						childRun.end();
 					});
-
-					run.appendOutput(
-						verificationResults,
-						new vscode.Location(res, new vscode.Position(0, 0)), 
-						testItem
-					);
 				}
 			})();
 		} catch (e) {
