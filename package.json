@@ -7,7 +7,7 @@
 	"private": true,
 	"icon": "img/safepkt-logo.jpg",
 	"galleryBanner": {
-		"color": "#000000",
+		"color": "#ffffff",
 		"theme": "light"
 	},
 	"licenses": [
