@@ -63,17 +63,6 @@
 		"configuration": {
 			"title": "SafePKT verifier",
 			"properties": {
-				"SmartContractVerifier.verifier": {
-					"type": "array",
-					"default": [
-						"/usr/local/bin/verify"
-					],
-					"description": "Path to the CLI verifier binary.",
-					"items": {
-						"type": "string"
-					},
-					"scope": "window"
-				},
 				"SmartContractVerifier.backend": {
 					"type": "array",
 					"default": [
