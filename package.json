@@ -5,7 +5,7 @@
 	"version": "0.2.7",
 	"publisher": "CJDNS",
 	"private": true,
-	"icon": "img/safepkt-logo.jpg",
+	"icon": "img/safepkt-logo.png",
 	"galleryBanner": {
 		"color": "#ffffff",
 		"theme": "light"
