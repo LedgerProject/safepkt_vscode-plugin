@@ -32,6 +32,10 @@ This value is an array, which can possibly contain as a single string value
 
 resulting in the default value "https://vinny.cjdns.fr"
 
+# Demo
+
+https://user-images.githubusercontent.com/1053622/139436630-5889228c-5e6f-4e54-8d4f-580b4120d219.mp4
+
 # Acknowledgment
 
 We're very grateful towards the following organizations, projects and people:
