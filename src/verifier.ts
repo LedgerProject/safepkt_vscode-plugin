@@ -8,6 +8,7 @@ import got, { CancelableRequest, Response } from 'got';
 import {Base64} from 'js-base64';
 import { constants } from 'fs';
 import { access } from 'fs/promises';
+import {TestResults} from './testRunHandler';
 
 const exists = async (path: string): Promise<boolean> => {
 	try {
@@ -19,7 +20,7 @@ const exists = async (path: string): Promise<boolean> => {
 };
 
 const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => void, workspaceRoot: string) => {
-	return new Promise<string>(async (resolve) => {
+	return new Promise<{output: string, testResults?: TestResults}>(async (resolve) => {
 		writeEmit('✅ Started rust-based smart contract verification.\r\n');
 
 		const backendParts: string[]|undefined = vscode.workspace
@@ -35,7 +36,8 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 
 			writeEmit(errorMessage);
 			closeEmit();
-			resolve(errorMessage);
+
+			resolve({output: errorMessage});
 
 			return;
 		}
@@ -107,11 +109,11 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 
 					const pattern = /([\r\n\s\S]+)VERIF[^\n\r]*([\r\n\s\S]+)/gm;
 
-					let testResults: string = '';
+					let verificationOutput: string = '';
 					let symbolicExecution: string = '';
 
 					let results = resp.raw_log.replace(pattern, (...args: any[]): string => {
-						testResults = args[1].replaceAll(
+						verificationOutput = args[1].replaceAll(
 							/([^.]+)[\.]+.+[\r\n]+/g, 
 							(...a: any[]) => `${a[1]}\r\n`
 						)
@@ -124,15 +126,66 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 							.replaceAll("\r\n", `\n`)
 							.replaceAll("Tests", `\nTests`);
 
-						return `${testResults.replaceAll("\r\n", `\n`)}\n${symbolicExecutionResults}`;
+						return `${verificationOutput.replaceAll("\r\n", `\n`)}\n${symbolicExecutionResults}`;
 					}).replaceAll(/\n/g, `\r\n`);
+
+					let testsResults: TestResults = [];
+
+					resp.raw_log
+						.replaceAll(
+							/.+::(\S+)\s\.\.\.\s(.+)/g,
+							(...args: any[]): string => JSON.stringify({ test: args[1], passed: args[2] === 'OK' }) 
+						).replaceAll(
+							/(\{[^\{\}]+\})/g,
+							(...matches: any[]): string => {
+								// Relying on side effect to populate an array of test results
+								if (typeof matches[1] !== undefined) {
+									testsResults.push(JSON.parse(matches[1]));
+								}
+
+								return `${matches[1]},`;
+							}
+						);
+
+					// KLEE fails the test when a panic is expected 
+					// by using #[should_panic] annotation
+					// This is the reason why we double check if a panic is expected
+					// for each test
+					const expectedPanics: {test: string, expectedPanic: boolean}[] = [];
+					resp.raw_log
+						.replaceAll(
+							/Tests results for "([^"]+)"\s+Expected panic occurred/g,
+							(...matches) => {
+								expectedPanics.push({
+									test: matches[1],
+									expectedPanic: typeof matches[1] !== 'undefined'
+								});
+
+								if (typeof matches[1] === 'undefined') {
+									return '';
+								}
+
+								return matches[1];
+							}
+						);
+
+					testsResults = testsResults.map(t => {
+						const panic = expectedPanics.find(p => t.test === p.test);
+
+						if (panic) {
+							t.passed = panic.expectedPanic;
+							return t;
+						}
+
+						return t;
+					});
 
 					progress.report({message: 'Complete - 100%'});
 
 					writeEmit(`${results}\r\n`);
 					closeEmit();
 
-					resolve(`${results}\r\n`);
+					resolve({output: `${results}\r\n`, testResults: testsResults});
 
 					return true;
 				}
@@ -173,4 +226,4 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 	});
 };
 
-export {promisifyVerification};
+export default promisifyVerification;
