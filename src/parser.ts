@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as Parser from 'web-tree-sitter';
 
-const nodeTypes: {
+let nodeTypes: {
 	node: any,
 	text: string,
 	parent: {
@@ -48,6 +48,7 @@ export function traverseTree(
 ): TestType[] {
 	let visitedChildren = false;
 	let cursor: Parser.TreeCursor = root.walk();
+	nodeTypes = [];
 
 	let parents = [{
 		node: cursor.currentNode(),
@@ -87,13 +88,20 @@ export function traverseTree(
 
 		const parent = parents[parents.length - 1];
 
-		if (cursor.nodeType === 'attribute_item') {
+		if (
+			cursor.nodeType === 'attribute_item' &&
+			(nodeTypes.find(
+				n => // Both node text and current syntax node should have not been found before
+					n.text === cursor.nodeText && 
+					n.node === cursor.currentNode()
+			) === undefined)
+		) {
 			nodeTypes.push({
 				node: cursor.currentNode(),
 				text: cursor.nodeText,
 				parent
 			});
-		} 
+		}
 	}
 
 	const tests: TestType[] = nodeTypes

@@ -13,7 +13,7 @@ const getOrCreateFile = async (
     uri: vscode.Uri,
     testControllerFactory: () => vscode.TestController,
     getParserTree: (source: string) => Parser.Tree,
-    {isFile, refresh}: {isFile: boolean, refresh: boolean} = {isFile: true, refresh: false}
+    {isFile}: {isFile: boolean} = {isFile: true}
 ): Promise<vscode.TestItem> => {
     testMethods = [];
 
@@ -25,18 +25,10 @@ const getOrCreateFile = async (
         throw new Error('Invalid test controller');
     }
 
-    const existing = testController.items.get(uri.toString());
-    if (existing && !refresh) {
-        return existing;
-    }
-
-    if (refresh && existing) {
-        testController.items.forEach((i, coll) => coll.delete(i.id));
-    }
-
     const testItem = testController.createTestItem(uri.toString(), uri.path.split('/').pop()!, uri);
     testItem.canResolveChildren = true;
 
+    testController.items.forEach((i, coll) => coll.delete(i.id));
     testController.items.add(testItem);
 
     if (isFile && typeof testController !== 'undefined') {
@@ -63,14 +55,20 @@ const getOrCreateFile = async (
             }
         }
 
-        testItem.children.forEach((child, col) => col.delete(child.id));
+        testItem.children.forEach((unitTest, col) => col.delete(unitTest.id));
 
         tests.map(t => {
-            const unitTest = testController.createTestItem(t.name, t.name);
+            const startPosition: string = `${t.node.startPosition.row}:${t.node.startPosition.column}`;
+
+            const unitTest = testController.createTestItem(startPosition, t.name, testItem.uri);
+
+            unitTest.range = new vscode.Range(
+                new vscode.Position(t.node.startPosition.row, 0),
+                new vscode.Position(t.node.startPosition.row, t.node.startPosition.column
+            ));
+
             unitTest.canResolveChildren = false;
             testItem.children.add(unitTest);
-
-            const startPosition: string = `${t.node.startPosition.row}:${t.node.startPosition.column}`;
 
             const methodIndex = testMethods.findIndex(m => m.startsAt === startPosition);
             const method = {

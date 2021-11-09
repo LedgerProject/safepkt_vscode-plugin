@@ -5,6 +5,30 @@ import runHandler from './testRunHandler';
 
 let testController: vscode.TestController;
 
+const testControllerFactoryGetter = (context: vscode.ExtensionContext): () => vscode.TestController => {
+	return (): vscode.TestController => {
+		const testSuite = 'smartContractTests';
+
+		try {
+			if (context.subscriptions.length === 0) {
+				const testController: vscode.TestController = vscode.tests.createTestController(testSuite, 'Smart Contract Tests');
+				context.subscriptions.push(testController);
+
+				return testController;
+			}
+
+			// @ts-ignore
+			return context.subscriptions.find(_ => true);
+		} catch (e) {
+			if (e instanceof Error) {
+				console.error(e);
+			}
+
+			throw e;
+		}
+	};
+};
+
 const setUpTestController = (
 	workspaceRoot: string,
 	testControllerFactory: () => vscode.TestController,
@@ -46,7 +70,7 @@ const setUpTestController = (
 							uri,
 							testControllerFactory,
 							getParserTree,
-							{isFile: false, refresh: false}
+							{isFile: false}
 						)
 					);
 					for (const file of await vscode.workspace.findFiles(pattern)) {
@@ -54,7 +78,7 @@ const setUpTestController = (
 							file,
 							testControllerFactory,
 							getParserTree,
-							{isFile: true, refresh: false}
+							{isFile: true}
 						);
 					}
 				});
@@ -68,7 +92,7 @@ const setUpTestController = (
 						file,
 						testControllerFactory,
 						getParserTree,
-						{isFile: true, refresh: false}
+						{isFile: true}
 					);
 				}
 		
@@ -87,14 +111,14 @@ const setUpTestController = (
 		}
 	};
   
-	const parseTestsInDocument = async (e: vscode.TextDocument, refresh: boolean = false) => {
+	const parseTestsInDocument = async (e: vscode.TextDocument) => {
 		if (e.uri.scheme === 'file' && e.uri.path.endsWith('.rs')) {
-			parseTestsInFileContents(
+			await parseTestsInFileContents(
 				await getOrCreateFile(
 					e.uri,
 					testControllerFactory,
 					getParserTree,
-					{refresh, isFile: true}
+					{isFile: true}
 				),
 				e.getText()
 			);
@@ -105,7 +129,7 @@ const setUpTestController = (
 	vscode.workspace.onDidOpenTextDocument(parseTestsInDocument);
 	
 	// We could also listen to document changes to re-parse unsaved changes:
-	vscode.workspace.onDidChangeTextDocument(e => parseTestsInDocument(e.document, true));
+	vscode.workspace.onDidChangeTextDocument(async e => await parseTestsInDocument(e.document));
 
 	testController.createRunProfile(
 		'Run smart contract verification',
@@ -124,5 +148,7 @@ const setUpTestController = (
 		true
 	);
 };
+
+export {testControllerFactoryGetter};
 
 export default setUpTestController;

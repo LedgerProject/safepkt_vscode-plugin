@@ -49,7 +49,7 @@ const runHandler = async (
                     res,
                     testControllerFactory,
                     getParserTree,
-                    {isFile: true, refresh: true}
+                    {isFile: true}
                 );
 
                 run.started(testItem);
@@ -64,26 +64,26 @@ const runHandler = async (
 
                 let failingTests = 0;
 
-                testItem.children.forEach(childTestItem => {
+                testItem.children.forEach(fileUnderTest => {
                     const childRun = testController.createTestRun(
                         new vscode.TestRunRequest(),
-                        childTestItem.label,
+                        fileUnderTest.label,
                         false
                     );
 
-                    childRun.started(childTestItem);
+                    childRun.started(fileUnderTest);
 
-                    const testFailureMessage = new vscode.TestMessage(`"${childTestItem.label}" has failed`);
+                    const testFailureMessage = new vscode.TestMessage(`"${fileUnderTest.label}" has failed`);
 
                     if (typeof verificationResults.testResults === 'undefined') {
                         childRun.failed(testItem, testFailureMessage, endedAt);
                         failingTests = failingTests + 1;
                     } else {
                         const testResult = verificationResults.testResults
-                        .find((i: TestResult) => i.test === childTestItem.label);
+                        .find((i: TestResult) => i.test === fileUnderTest.label);
                 
                         const passingTest = isPassingTest(
-                            childTestItem,
+                            fileUnderTest,
                             testResult,
                             childRun,
                             testFailureMessage,
