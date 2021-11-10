@@ -23,14 +23,14 @@ For example:
 
 This extension contributes the following settings:
 
-* `safePKTSmartContractVerifier.backend`: ["https://vinny.cjdns.fr"]
+* `safePKTSmartContractVerifier.backend`: ["https://api.safepkt.weaving-the-web.org"]
 
 This value is an array, which can possibly contain as a single string value
  - an HTTP or HTTPS protocol scheme ("https://")  
- - a host name ("vinny.cjdns.fr")  
+ - a host name ("api.safepkt.weaving-the-web.org")  
  - a base path ("" empty by default)  
 
-resulting in the default value "https://vinny.cjdns.fr"
+resulting in the default value "https://api.safepkt.weaving-the-web.org"
 
 # Demo
 
