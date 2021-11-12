@@ -69,7 +69,18 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 				responseType: 'json'
 			});
 
-			const response: {[index: string]: string} = await responsePromise.json();
+			let response: {[index: string]: string};
+
+			try {
+				response = await responsePromise.json();
+			} catch (e) {
+				if (e instanceof Error) {
+					console.error(e);
+				}
+
+				throw e;
+			}
+
 			const projectId = response['project_id'];
 
 			if (projectId && projectId.length > 0) {

@@ -45,7 +45,11 @@ We're very grateful towards the following organizations, projects and people:
  - Tree-sitter, a parser generator tool and an incremental parsing library 
  - the Rust community at large
  - All members of the NGI-Ledger Consortium for accompanying us  
- [![Blumorpho](../main/img/blumorpho-logo.png?raw=true)](https://www.blumorpho.com/) [![Dyne](../main/img/dyne-logo.png?raw=true)](https://www.dyne.org/ledger/) [![FundingBox](../main/img/funding-box-logo.png?raw=true)](https://fundingbox.com/) [![NGI LEDGER](../main/img/ledger-eu-logo.png?raw=true)](https://ledger-3rd-open-call.fundingbox.com/)
+ [![Blumorpho](../main/img/blumorpho-logo.png?raw=true)](https://www.blumorpho.com/)  
+ [![Dyne](../main/img/dyne-logo.png?raw=true)](https://www.dyne.org/ledger/)  
+ [![FundingBox](../main/img/funding-box-logo.png?raw=true)](https://fundingbox.com/)  
+ [![NGI LEDGER](../main/img/ledger-eu-logo.png?raw=true)](https://ledgerproject.eu/)  
+ [![European Commission](../main/img/european-commission-logo.png?raw=true)](https://ec.europa.eu/programmes/horizon2020/en/home)
 
 # License
 
