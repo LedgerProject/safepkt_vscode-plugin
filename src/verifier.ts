@@ -48,6 +48,9 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 			const backend = backendParts.join("");
 			
 			const routes: {[index: string]: {path: string}} = {
+				getSteps: {
+					path: '/steps'
+				},
 				uploadSource: {
 					path: '/source'
 				},
