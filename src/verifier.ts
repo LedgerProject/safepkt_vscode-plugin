@@ -121,7 +121,7 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 				if (isVerificationOver) {
 					const resp: {[index: string]: string} = await programVerificationStep(projectId, 'report'); 
 
-					const pattern = /([\r\n\s\S]+)VERIF[^\n\r]*([\r\n\s\S]+)/gm;
+					const pattern = /([\r\n\s\S]+VERIF[^\n\r]*)([\r\n\s\S]+)/gm;
 
 					let verificationOutput: string = '';
 					let symbolicExecution: string = '';
@@ -145,7 +145,21 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 
 					let testsResults: TestResults = [];
 
-					resp.raw_log
+					const rawLog = resp.raw_log;
+					let filteredOutput = '';
+
+					rawLog.replaceAll(
+						/[\r\n\s\S]+(Running\s[\r\n\s\S]+VERIFICATION_[^\n\r]*)([\r\n\s\S]+)$/gm,
+						(...matches: any[]): string => {
+							if (typeof matches[1] !== undefined) {
+								filteredOutput = matches[1];
+							}
+
+							return matches[0];
+						}
+					);
+
+					filteredOutput
 						.replaceAll(
 							/.+::(\S+)\s\.\.\.\s(.+)/g,
 							(...args: any[]): string => JSON.stringify({ test: args[1], passed: args[2] === 'OK' }) 
@@ -166,7 +180,7 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 					// This is the reason why we double check if a panic is expected
 					// for each test
 					const expectedPanics: {test: string, expectedPanic: boolean}[] = [];
-					resp.raw_log
+					filteredOutput
 						.replaceAll(
 							/Tests results for "([^"]+)"\s+Expected panic occurred/g,
 							(...matches) => {
@@ -196,7 +210,9 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 
 					progress.report({message: 'Complete - 100%'});
 
+					writeEmit(`raw logs:\r\n${resp.raw_log}\r\n`);
 					writeEmit(`${results}\r\n`);
+
 					closeEmit();
 
 					resolve({output: `${results}\r\n`, testResults: testsResults});
