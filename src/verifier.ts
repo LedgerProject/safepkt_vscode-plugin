@@ -180,7 +180,7 @@ const promisifyVerification = (writeEmit: (m: string) => void, closeEmit: () => 
 					// This is the reason why we double check if a panic is expected
 					// for each test
 					const expectedPanics: {test: string, expectedPanic: boolean}[] = [];
-					filteredOutput
+					rawLog
 						.replaceAll(
 							/Tests results for "([^"]+)"\s+Expected panic occurred/g,
 							(...matches) => {
